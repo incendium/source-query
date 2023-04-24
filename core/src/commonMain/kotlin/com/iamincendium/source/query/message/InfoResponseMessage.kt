@@ -4,6 +4,12 @@ import com.iamincendium.source.query.Environment
 import com.iamincendium.source.query.ServerType
 import com.iamincendium.source.query.Visibility
 import com.iamincendium.source.query.VACStatus
+import com.iamincendium.source.query.util.readAsciiCString
+import com.iamincendium.source.query.util.readByte
+import com.iamincendium.source.query.util.readIntLittleEndian
+import com.iamincendium.source.query.util.readLongLittleEndian
+import com.iamincendium.source.query.util.readShortLittleEndian
+import kotlin.experimental.and
 
 /**
  * `S2A_INFO`
@@ -47,28 +53,113 @@ internal class InfoResponseMessage(
     header: MessageHeader,
     content: ByteArray,
 ) : SourceResponseMessage(MessageType.Response.PlayerResponse, header, content) {
-    val networkVersion: Byte = TODO()
-    val serverName: String = TODO()
-    val mapName: String = TODO()
-    val gameFolder: String = TODO()
-    val gameName: String = TODO()
-    val appId: Int = TODO()
-    val numberOfPlayers: Int = TODO()
-    val maxPlayers: Int = TODO()
-    val numberOfBots: Int = TODO()
-    val serverType: ServerType = TODO()
-    val environment: Environment = TODO()
-    val visibility: Visibility = TODO()
-    val vacStatus: VACStatus = TODO()
-    val gameVersion: String = TODO()
+    val networkVersion: Byte
+    val serverName: String
+    val mapName: String
+    val gameFolder: String
+    val gameName: String
+    val appId: Int
+    val numberOfPlayers: Int
+    val maxPlayers: Int
+    val numberOfBots: Int
+    val serverType: ServerType
+    val environment: Environment
+    val visibility: Visibility
+    val vacStatus: VACStatus
+    val gameVersion: String
 
-    private val extraDataFlag: Byte = TODO()
+    val gamePort: Int?
+    val steamId: Long?
 
-    val gamePort: Int? = TODO()
-    val steamId: Long? = TODO()
+    val spectatorPort: Int?
+    val spectatorServerName: String?
 
-    val spectatorPort: Int? = TODO()
-    val spectatorServerName: String? = TODO()
+    val gameId: Long?
 
-    val gameId: Long? = TODO()
+    init {
+        val networkVersion = content.readByte(0)
+        this.networkVersion = networkVersion.value
+
+        val serverName = content.readAsciiCString(networkVersion.nextOffset)
+        this.serverName = serverName.value
+
+        val mapName = content.readAsciiCString(serverName.nextOffset)
+        this.mapName = mapName.value
+
+        val gameFolder = content.readAsciiCString(mapName.nextOffset)
+        this.gameFolder = gameFolder.value
+
+        val gameName = content.readAsciiCString(gameFolder.nextOffset)
+        this.gameName = gameName.value
+
+        val appId = content.readIntLittleEndian(gameName.nextOffset)
+        this.appId = appId.value
+
+        val numberOfPlayers = content.readIntLittleEndian(appId.nextOffset)
+        this.numberOfPlayers = numberOfPlayers.value
+
+        val maxPlayers = content.readIntLittleEndian(numberOfPlayers.nextOffset)
+        this.maxPlayers = maxPlayers.value
+
+        val numberOfBots = content.readIntLittleEndian(maxPlayers.nextOffset)
+        this.numberOfBots = numberOfBots.value
+
+        val serverType = content.readByte(numberOfBots.nextOffset)
+        this.serverType = ServerType(serverType.value)
+
+        val environment = content.readByte(serverType.nextOffset)
+        this.environment = Environment(environment.value)
+
+        val visibility = content.readByte(environment.nextOffset)
+        this.visibility = Visibility(visibility.value)
+
+        val vacStatus = content.readByte(visibility.nextOffset)
+        this.vacStatus = VACStatus(vacStatus.value)
+
+        val gameVersion = content.readAsciiCString(vacStatus.nextOffset)
+        this.gameVersion = gameVersion.value
+
+        val extraDataFlag = content.readByte(gameVersion.nextOffset)
+        var nextOffset = extraDataFlag.nextOffset
+
+        if (extraDataFlag.value and EDF_GAME_PORT == EDF_GAME_PORT) {
+            val gamePort = content.readShortLittleEndian(nextOffset)
+            this.gamePort = gamePort.value.toInt()
+
+            nextOffset = gamePort.nextOffset
+        } else {
+            gamePort = null
+        }
+
+        if (extraDataFlag.value and EDF_SERVER_ID == EDF_SERVER_ID) {
+            val steamId = content.readLongLittleEndian(nextOffset)
+            this.steamId = steamId.value
+
+            nextOffset = steamId.nextOffset
+        } else {
+            steamId = null
+        }
+
+        if (extraDataFlag.value and EDF_SPECTATOR_INFO == EDF_SPECTATOR_INFO) {
+            val spectatorPort = content.readShortLittleEndian(nextOffset)
+            this.spectatorPort = spectatorPort.value.toInt()
+
+            val spectatorServerName = content.readAsciiCString(spectatorPort.nextOffset)
+            this.spectatorServerName = spectatorServerName.value
+
+            nextOffset = spectatorServerName.nextOffset
+        } else {
+            spectatorPort = null
+            spectatorServerName = null
+        }
+
+        if (extraDataFlag.value and EDF_GAME_ID == EDF_GAME_ID) {
+            val gameId = content.readLongLittleEndian(nextOffset)
+            this.gameId = gameId.value
+
+            nextOffset = gameId.nextOffset
+        } else {
+            gameId = null
+        }
+    }
 }

@@ -1,5 +1,8 @@
 package com.iamincendium.source.query.message
 
+import com.iamincendium.source.query.util.readAsciiCString
+import com.iamincendium.source.query.util.readByte
+
 /**
  * `S2A_RULES`
  *
@@ -22,4 +25,17 @@ package com.iamincendium.source.query.message
 internal class RulesResponseMessage(
     header: MessageHeader,
     content: ByteArray,
-) : SourceResponseMessage(MessageType.Response.PlayerResponse, header, content)
+) : SourceResponseMessage(MessageType.Response.PlayerResponse, header, content) {
+    val rules: Map<String, String> = buildMap {
+        val ruleCount = content.readByte(0)
+
+        var nextOffset = ruleCount.nextOffset
+        repeat(ruleCount.value.toInt()) {
+            val name = content.readAsciiCString(nextOffset)
+            val value = content.readAsciiCString(name.nextOffset)
+            nextOffset = value.nextOffset
+
+            this[name.value] = value.value
+        }
+    }
+}
