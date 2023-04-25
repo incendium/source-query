@@ -1,7 +1,7 @@
 package com.iamincendium.source.query.message
 
-import com.iamincendium.source.query.util.readAsciiCString
-import com.iamincendium.source.query.util.readByte
+import com.iamincendium.source.query.util.readNullTerminatedUtf8String
+import okio.Buffer
 
 /**
  * `S2A_RULES`
@@ -26,16 +26,11 @@ internal class RulesResponseMessage(
     header: MessageHeader,
     content: ByteArray,
 ) : SourceResponseMessage(MessageType.Response.PlayerResponse, header, content) {
+    private val buffer = Buffer().also { it.write(content) }
+
     val rules: Map<String, String> = buildMap {
-        val ruleCount = content.readByte(0)
-
-        var nextOffset = ruleCount.nextOffset
-        repeat(ruleCount.value.toInt()) {
-            val name = content.readAsciiCString(nextOffset)
-            val value = content.readAsciiCString(name.nextOffset)
-            nextOffset = value.nextOffset
-
-            this[name.value] = value.value
+        repeat(buffer.readByte().toInt()) {
+            this[buffer.readNullTerminatedUtf8String()] = buffer.readNullTerminatedUtf8String()
         }
     }
 }

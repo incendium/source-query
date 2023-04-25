@@ -21,10 +21,12 @@ kotlin {
             useJUnitPlatform()
         }
     }
+    js(IR)
 
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(libs.square.okio)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.michaelBull.kotlin.result)
             }

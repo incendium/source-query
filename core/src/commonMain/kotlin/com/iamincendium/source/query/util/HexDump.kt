@@ -87,22 +87,22 @@ internal fun ByteArray.hexDump(
 /**
  * Convert a byte to a two character hexidecimal string.
  */
-internal fun Byte.toHexString() = toString(16).padStart(Byte.SIZE_BYTES, '0').uppercase()
+internal fun Byte.toHexString() = toString(16).padStart(Byte.SIZE_BYTES * 2, '0').uppercase()
 
 /**
  * Convert a byte to a two character hexidecimal string.
  */
-internal fun UByte.toHexString() = toString(16).padStart(UByte.SIZE_BYTES, '0').uppercase()
+internal fun UByte.toHexString() = toString(16).padStart(UByte.SIZE_BYTES * 2, '0').uppercase()
 
 /**
  * Convert an integer to a four character hexidecimal string.
  */
-internal fun Int.toHexString() = toString(16).padStart(Int.SIZE_BYTES, '0').uppercase()
+internal fun Int.toHexString() = toString(16).padStart(Int.SIZE_BYTES * 2, '0').uppercase()
 
 /**
  * Convert a long to an eight character hexidecimal string.
  */
-internal fun Long.toHexString() = toString(16).padStart(Long.SIZE_BYTES, '0').uppercase()
+internal fun Long.toHexString() = toString(16).padStart(Long.SIZE_BYTES * 2, '0').uppercase()
 
 /**
  * Determine whether or not a byte is printable.

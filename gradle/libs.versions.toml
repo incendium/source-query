@@ -109,7 +109,7 @@ commonTest-common = [
     "test-assertk-common",
     "test-kotest-framework-datatest",
     "test-kotest-framework-engine",
-    "test-mockk-common",
+    # "test-mockk-common",
 ]
 commonTest-jvm = [
     "test-assertk-jvm",

@@ -1,6 +1,6 @@
 package com.iamincendium.source.query.message
 
-import com.iamincendium.source.query.util.readIntLittleEndian
+import okio.Buffer
 
 /**
  * `S2A_CHALLENGE`
@@ -20,5 +20,7 @@ internal class ChallengeResponseMessage(
     header: MessageHeader,
     content: ByteArray,
 ) : SourceResponseMessage(MessageType.Response.ChallengeResponse, header, content) {
-    val challengeNumber: Int = content.readIntLittleEndian(header.size + 0).value
+    private val buffer = Buffer().also { it.write(content) }
+
+    val challengeNumber: Int = buffer.readIntLe()
 }

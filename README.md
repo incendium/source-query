@@ -1,5 +1,7 @@
 # Source Query
 
+(This library is still under heavy development.)
+
 A Kotlin library for querying Source or Steamworks-based game servers using Coroutines. This project was originally 
 designed around kotlinx-io, then ktor-io/ktor-network, but the latter seems to not have public access to UDP packets, 
 so I am currently exploring options on how to approach this. One option is a simple PR, the other is to explore other 

@@ -1,6 +1,6 @@
 package com.iamincendium.source.query.message
 
-internal val INFO_REQUEST_CONTENT = "Source Engine Query\u0000".toByteArray(Charsets.UTF_8)
+internal val INFO_REQUEST_CONTENT = "Source Engine Query\u0000".encodeToByteArray()
 
 /**
  * `A2S_INFO`

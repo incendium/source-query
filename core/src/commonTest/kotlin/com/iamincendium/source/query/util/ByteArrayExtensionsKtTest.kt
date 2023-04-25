@@ -130,7 +130,7 @@ class ByteArrayExtensionsKtTest : DescribeSpec({
     describe("ByteArray.readAsciiString") {
         it("should read a fixed length ASCII string") {
             val expected = "this was a triumph"
-            val array = expected.toByteArray(Charsets.US_ASCII)
+            val array = expected.encodeToByteArray()
 
             val value = array.readAsciiString(0, expected.length)
             assertThat(value.value).isEqualTo(expected)
@@ -139,7 +139,7 @@ class ByteArrayExtensionsKtTest : DescribeSpec({
     describe("ByteArray.readAsciiCString") {
         it("should read a NUL-terminated ASCII string") {
             val expected = "this was a triumph"
-            val array = (expected + "\u0000").toByteArray(Charsets.US_ASCII)
+            val array = (expected + "\u0000").encodeToByteArray()
 
             val value = array.readAsciiCString(0)
             assertThat(value.value).isEqualTo(expected)

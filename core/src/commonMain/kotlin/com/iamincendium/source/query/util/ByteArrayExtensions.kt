@@ -56,8 +56,7 @@ public fun ByteArray.readByte(offset: Int): ReadValue<Byte> {
 public fun ByteArray.readShortLittleEndian(offset: Int): ReadValue<Short> {
     assertCanRead(offset, Short.SIZE_BYTES)
 
-    val value = (get(0).toInt()
-        or (get(1).toInt() and 0xFF shl 8)).toShort()
+    val value = (get(0).toInt() or (get(1).toInt() and 0xFFFF shl 8)).toShort()
 
     return ReadValue(value, Short.SIZE_BYTES, offset + Short.SIZE_BYTES)
 }
@@ -68,8 +67,7 @@ public fun ByteArray.readShortLittleEndian(offset: Int): ReadValue<Short> {
 public fun ByteArray.readShortBigEndian(offset: Int): ReadValue<Short> {
     assertCanRead(offset, Short.SIZE_BYTES)
 
-    val value = (get(0).toInt() shl 8
-        or (get(1).toInt() and 0xFF)).toShort()
+    val value = (get(0).toInt() shl 8 or (get(1).toInt() and 0xFFFF)).toShort()
 
     return ReadValue(value, Short.SIZE_BYTES, offset + Short.SIZE_BYTES)
 }

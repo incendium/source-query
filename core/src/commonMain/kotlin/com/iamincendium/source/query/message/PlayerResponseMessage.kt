@@ -1,10 +1,9 @@
 package com.iamincendium.source.query.message
 
 import com.iamincendium.source.query.Player
-import com.iamincendium.source.query.util.readAsciiCString
-import com.iamincendium.source.query.util.readByte
-import com.iamincendium.source.query.util.readFloatLittleEndian
-import com.iamincendium.source.query.util.readIntLittleEndian
+import com.iamincendium.source.query.util.readFloatLe
+import com.iamincendium.source.query.util.readNullTerminatedUtf8String
+import okio.Buffer
 
 /**
  * `S2A_PLAYER`
@@ -31,18 +30,16 @@ internal class PlayerResponseMessage(
     header: MessageHeader,
     content: ByteArray,
 ) : SourceResponseMessage(MessageType.Response.PlayerResponse, header, content) {
+    private val buffer = Buffer().also { it.write(content) }
+
     val players: List<Player> = buildList {
-        val playerCount = content.readByte(0)
-
-        var nextOffset = playerCount.nextOffset
-        repeat(playerCount.value.toInt()) {
-            val id = content.readByte(nextOffset)
-            val name = content.readAsciiCString(id.nextOffset)
-            val score = content.readIntLittleEndian(name.nextOffset)
-            val connectedTime = content.readFloatLittleEndian(score.nextOffset)
-            nextOffset = connectedTime.nextOffset
-
-            this += Player(id.value.toInt(), name.value, score.value, connectedTime.value)
+        repeat(buffer.readByte().toInt()) {
+            this += Player(
+                buffer.readByte().toInt(),
+                buffer.readNullTerminatedUtf8String(),
+                buffer.readIntLe(),
+                buffer.readFloatLe(),
+            )
         }
     }
 }

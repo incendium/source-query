@@ -14,7 +14,7 @@ private fun infoResponseMessage(vararg values: Int) =
     InfoResponseMessage(SingleFragmentMessageHeader, values.toByteArray())
 
 class InfoResponseMessageTest : DescribeSpec({
-    xdescribe("InfoResponseMessage") {
+    describe("InfoResponseMessage") {
         context("should create an info response from the examples in the valve api docs") {
             it("cs source") {
                 val response = infoResponseMessage(
@@ -89,7 +89,7 @@ class InfoResponseMessageTest : DescribeSpec({
                     assertThat(numberOfPlayers).isEqualTo(1)
                     assertThat(maxPlayers).isEqualTo(4)
                     assertThat(numberOfBots).isEqualTo(0)
-                    assertThat(serverType).isInstanceOf(Environment.Unknown::class)
+                    assertThat(serverType).isInstanceOf(ServerType.Unknown::class)
                     assertThat(environment).isEqualTo(Environment.Windows)
                     assertThat(visibility).isEqualTo(Visibility.Public)
                     assertThat(vacStatus).isEqualTo(VACStatus.Disabled)
