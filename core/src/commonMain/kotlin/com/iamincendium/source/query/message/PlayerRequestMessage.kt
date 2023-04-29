@@ -1,7 +1,5 @@
 package com.iamincendium.source.query.message
 
-import com.iamincendium.source.query.util.toByteArrayLittleEndian
-
 /**
  * `A2S_PLAYER`
  *
@@ -16,4 +14,4 @@ import com.iamincendium.source.query.util.toByteArrayLittleEndian
  * @see PlayerResponseMessage
  */
 public class PlayerRequestMessage(challenge: Int) :
-    SourceRequestMessage(MessageType.Request.PlayerRequest, challenge.toByteArrayLittleEndian())
+    SourceRequestMessage(MessageType.Request.PlayerRequest, buildChallengePayload(challenge))

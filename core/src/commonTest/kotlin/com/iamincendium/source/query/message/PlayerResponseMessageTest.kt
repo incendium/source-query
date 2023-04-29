@@ -4,11 +4,11 @@ import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
-import com.iamincendium.source.query.util.toByteArray
+import com.iamincendium.source.query.test.util.byteArrayFromInts
 import io.kotest.core.spec.style.DescribeSpec
 
 private fun playerResponseMessage(vararg values: Int) =
-    PlayerResponseMessage(SingleFragmentMessageHeader, values.toByteArray())
+    PlayerResponseMessage(SingleFragmentMessageHeader, byteArrayFromInts(*values))
 
 class PlayerResponseMessageTest : DescribeSpec({
     describe("PlayerResponseMessage") {

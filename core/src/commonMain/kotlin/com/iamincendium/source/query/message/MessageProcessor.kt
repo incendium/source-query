@@ -5,14 +5,14 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.iamincendium.source.query.error.ClientError
 import com.iamincendium.source.query.error.SourceQueryError
-import com.iamincendium.source.query.util.readIntLittleEndian
 import com.iamincendium.source.query.util.runOrError
+import okio.Buffer
 
 internal class MessageProcessor {
-    fun <T : SourceResponseMessage> process(
+    fun process(
         message: ByteArray,
-        expectedType: MessageType.Response,
-    ): Result<T, SourceQueryError> = runOrError {
+        expectedType: MessageType.Response<*>,
+    ): Result<SourceResponseMessage, SourceQueryError> = runOrError {
         val header = when (val processedHeader = processHeader(message)) {
             is Ok -> processedHeader.value
             is Err -> return processedHeader
@@ -25,7 +25,7 @@ internal class MessageProcessor {
             return Err(ClientError.UnexpectedPacketResponse(type))
         }
 
-        val responseMessage = when (type) {
+        when (type) {
             MessageType.Response.InfoResponse -> InfoResponseMessage(header, payload)
             MessageType.Response.PlayerResponse -> PlayerResponseMessage(header, payload)
             MessageType.Response.RulesResponse -> RulesResponseMessage(header, payload)
@@ -34,15 +34,15 @@ internal class MessageProcessor {
                 return Err(ClientError.UnexpectedMessageResponse(type))
             }
         }
-
-        @Suppress("UNCHECKED_CAST")
-        responseMessage as T
     }
 
     private fun processHeader(message: ByteArray): Result<MessageHeader, SourceQueryError> = runOrError {
-        when (val headerId = message.readIntLittleEndian(0).value) {
+        val buffer = Buffer()
+        buffer.write(message)
+
+        when (val headerId = buffer.readIntLe()) {
             HEADER_SINGLE -> SingleFragmentMessageHeader
-            HEADER_FRAGMENT -> MultiFragmentSourceMessageHeader(message)
+            HEADER_FRAGMENT -> MultiFragmentSourceMessageHeader(buffer)
             else -> return Err(ClientError.UnexpectedPacketHeader(headerId))
         }
     }

@@ -1,8 +1,6 @@
 package com.iamincendium.source.query.error
 
 import com.iamincendium.source.query.message.MessageType
-import com.iamincendium.source.query.util.toByteArrayLittleEndian
-import com.iamincendium.source.query.util.toHexDump
 import com.iamincendium.source.query.util.toHexString
 
 public sealed interface ClientError : SourceQueryError {

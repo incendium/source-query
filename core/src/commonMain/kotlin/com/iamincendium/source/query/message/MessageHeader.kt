@@ -1,9 +1,6 @@
 package com.iamincendium.source.query.message
 
-import com.iamincendium.source.query.util.readByte
-import com.iamincendium.source.query.util.readIntLittleEndian
-import com.iamincendium.source.query.util.readShortLittleEndian
-import com.iamincendium.source.query.util.toByteArrayLittleEndian
+import okio.Buffer
 
 internal sealed interface MessageHeader {
     val identifier: Int
@@ -20,7 +17,7 @@ internal sealed interface MessageHeader {
  */
 internal object SingleFragmentMessageHeader : MessageHeader {
     override val identifier: Int = HEADER_SINGLE
-    override val bytes: ByteArray = identifier.toByteArrayLittleEndian()
+    override val bytes: ByteArray = Buffer().also { it.writeIntLe(identifier) }.readByteArray()
     override val size: Int = bytes.size
 }
 
@@ -43,14 +40,16 @@ internal object SingleFragmentMessageHeader : MessageHeader {
  * | CRC32 sum | `long` | [Int]       | CRC32 checksum of uncompressed response.            |
  */
 @Suppress("MagicNumber", "ForbiddenComment")
-internal class MultiFragmentSourceMessageHeader(content: ByteArray, appId: Long = UNKNOWN_APP_ID) : MessageHeader {
+internal class MultiFragmentSourceMessageHeader(buffer: Buffer, appId: Long = UNKNOWN_APP_ID) : MessageHeader {
+    private val peekBuffer = buffer.peek()
+
     // FIXME: Need to find some sort of test data for this as I have yet to run into a source server implementation that
     //  actually uses this packet/header format.
     override val identifier: Int = HEADER_FRAGMENT
 
-    val id: Int
-    val total: Byte
-    val number: Byte
+    val id: Int = peekBuffer.readIntLe()
+    val total: Byte = peekBuffer.readByte()
+    val number: Byte = peekBuffer.readByte()
     val packetSize: Short
     val isCompressed: Boolean
     val uncompressedSize: Int
@@ -60,46 +59,32 @@ internal class MultiFragmentSourceMessageHeader(content: ByteArray, appId: Long 
     override val size: Int
 
     init {
-        // skip header id which is already accounted for
-        val initialOffset = Int.SIZE_BYTES
-
-        val id = content.readIntLittleEndian(initialOffset)
-        this.id = id.value
-
-        val total = content.readByte(id.nextOffset)
-        this.total = total.value
-
-        val number = content.readByte(total.nextOffset)
-        this.number = number.value
-
-        val nextOffset = if (appId !in APP_ID_NO_SIZE) {
-            val packetSize = content.readShortLittleEndian(number.nextOffset)
-            this.packetSize = packetSize.value
-
-            packetSize.nextOffset
+        packetSize = if (appId !in APP_ID_NO_SIZE) {
+            peekBuffer.readShortLe()
         } else {
-            this.packetSize = HEADER_NO_SIZE
-
-            number.nextOffset
+            HEADER_NO_SIZE
         }
 
         isCompressed = (this.id and 1) == 1
-        val finalOffset = if (isCompressed) {
-            val uncompressedSize = content.readIntLittleEndian(nextOffset)
-            val uncompressedCrc32Sum = content.readIntLittleEndian(uncompressedSize.nextOffset)
-
-            this.uncompressedSize = uncompressedSize.value
-            this.uncompressedCrc32Sum = uncompressedCrc32Sum.value
-
-            uncompressedCrc32Sum.nextOffset
+        if (isCompressed) {
+            uncompressedSize = peekBuffer.readIntLe()
+            uncompressedCrc32Sum = peekBuffer.readIntLe()
         } else {
             uncompressedSize = HEADER_NOT_COMPRESSED
             uncompressedCrc32Sum = HEADER_NOT_COMPRESSED
-
-            nextOffset
         }
 
-        bytes = content.copyOfRange(initialOffset, finalOffset)
+        // TODO: See if there is a better way to do this. Judging from the Okio API though,
+        //  there does not seem to be a way to access the position of the peekBUffer.
+        var byteCount = Int.SIZE_BYTES + (Byte.SIZE_BYTES * 2)
+        if (appId !in APP_ID_NO_SIZE) {
+            byteCount += Short.SIZE_BYTES
+        }
+        if (isCompressed) {
+            byteCount += Int.SIZE_BYTES * 2
+        }
+
+        bytes = buffer.readByteArray(byteCount.toLong())
         size = bytes.size
     }
 }

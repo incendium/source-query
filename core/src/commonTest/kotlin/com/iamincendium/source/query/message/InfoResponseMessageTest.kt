@@ -7,11 +7,11 @@ import com.iamincendium.source.query.Environment
 import com.iamincendium.source.query.ServerType
 import com.iamincendium.source.query.VACStatus
 import com.iamincendium.source.query.Visibility
-import com.iamincendium.source.query.util.toByteArray
+import com.iamincendium.source.query.test.util.byteArrayFromInts
 import io.kotest.core.spec.style.DescribeSpec
 
 private fun infoResponseMessage(vararg values: Int) =
-    InfoResponseMessage(SingleFragmentMessageHeader, values.toByteArray())
+    InfoResponseMessage(SingleFragmentMessageHeader, byteArrayFromInts(*values))
 
 class InfoResponseMessageTest : DescribeSpec({
     describe("InfoResponseMessage") {

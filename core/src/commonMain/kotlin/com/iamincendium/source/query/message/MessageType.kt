@@ -1,5 +1,8 @@
 package com.iamincendium.source.query.message
 
+import com.iamincendium.source.query.Player
+import com.iamincendium.source.query.ServerInfo
+
 private const val S2A_INFO: Byte = 0x49
 private const val A2S_INFO: Byte = 0x54
 private const val S2A_PLAYER: Byte = 0x44
@@ -13,37 +16,33 @@ public sealed interface MessageType {
     public val byte: Byte
     public val size: Int get() = Byte.SIZE_BYTES
 
-    public sealed interface Request : MessageType {
-        public val responseType: Response
+    public sealed interface Request<T : Any> : MessageType {
+        public val responseType: Response<T>
 
-        public object InfoRequest : Request {
+        public object InfoRequest : Request<ServerInfo> {
             override val byte: Byte = A2S_INFO
-            override val responseType: Response = Response.InfoResponse
+            override val responseType: Response<ServerInfo> = Response.InfoResponse
         }
-        public object PlayerRequest : Request {
+        public object PlayerRequest : Request<List<Player>> {
             override val byte: Byte = A2S_PLAYER
-            override val responseType: Response = Response.PlayerResponse
+            override val responseType: Response<List<Player>> = Response.PlayerResponse
         }
-        public object RulesRequest : Request {
+        public object RulesRequest : Request<Map<String, Any>> {
             override val byte: Byte = A2S_RULES
-            override val responseType: Response = Response.RulesResponse
-        }
-        public object ChallengeRequest : Request {
-            override val byte: Byte = A2S_SERVERQUERY_GETCHALLENGE
-            override val responseType: Response = Response.ChallengeResponse
+            override val responseType: Response<Map<String, Any>> = Response.RulesResponse
         }
     }
-    public sealed interface Response : MessageType {
-        public object InfoResponse : Response {
+    public sealed interface Response<T : Any> : MessageType {
+        public object InfoResponse : Response<ServerInfo> {
             override val byte: Byte = S2A_INFO
         }
-        public object PlayerResponse : Response {
+        public object PlayerResponse : Response<List<Player>> {
             override val byte: Byte = S2A_PLAYER
         }
-        public object RulesResponse : Response {
+        public object RulesResponse : Response<Map<String, Any>> {
             override val byte: Byte = S2A_RULES
         }
-        public object ChallengeResponse : Response {
+        public object ChallengeResponse : Response<Unit> {
             override val byte: Byte = S2C_CHALLENGE
         }
     }
@@ -52,13 +51,12 @@ public sealed interface MessageType {
 }
 
 public fun MessageType(byte: Byte): MessageType = when (byte) {
-    S2A_INFO -> MessageType.Request.InfoRequest
-    A2S_INFO -> MessageType.Response.InfoResponse
-    S2A_PLAYER -> MessageType.Request.PlayerRequest
-    A2S_PLAYER -> MessageType.Response.PlayerResponse
-    S2A_RULES -> MessageType.Request.RulesRequest
-    A2S_RULES -> MessageType.Response.RulesResponse
-    S2C_CHALLENGE -> MessageType.Request.ChallengeRequest
-    A2S_SERVERQUERY_GETCHALLENGE -> MessageType.Response.ChallengeResponse
+    A2S_INFO -> MessageType.Request.InfoRequest
+    S2A_INFO -> MessageType.Response.InfoResponse
+    A2S_PLAYER -> MessageType.Request.PlayerRequest
+    S2A_PLAYER -> MessageType.Response.PlayerResponse
+    A2S_RULES -> MessageType.Request.RulesRequest
+    S2A_RULES -> MessageType.Response.RulesResponse
+    S2C_CHALLENGE -> MessageType.Response.ChallengeResponse
     else -> MessageType.UnknownMessage(byte)
 }

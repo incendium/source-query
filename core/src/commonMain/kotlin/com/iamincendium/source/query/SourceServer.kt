@@ -1,19 +1,24 @@
 package com.iamincendium.source.query
 
+import com.github.michaelbull.result.Result
 import com.iamincendium.source.query.client.SourceClient
-import com.iamincendium.source.query.message.MessageProcessor
+import com.iamincendium.source.query.error.SourceQueryError
+import com.iamincendium.source.query.message.MessageType
+import okio.Closeable
 
-public class SourceServer(address: String, port: Int) {
+public class SourceServer(address: String, port: Int) : Closeable {
     private val client = SourceClient(address, port)
-    private val parser = MessageProcessor()
 
-    public suspend fun fetchInfo(): ServerInfo {
-        TODO("Fetch server info packet from client and parse it")
-    }
-    public suspend fun fetchPlayers(): List<Player> {
-        TODO("Fetch player info packet from client and parse it")
-    }
-    public suspend fun fetchRules(): Map<String, String> {
-        TODO("Fetch rules info packet from client and parse it")
+    public suspend fun fetchInfo(): Result<ServerInfo, SourceQueryError> =
+        client.fetch(MessageType.Request.InfoRequest)
+
+    public suspend fun fetchPlayers(): Result<List<Player>, SourceQueryError> =
+        client.fetch(MessageType.Request.PlayerRequest)
+
+    public suspend fun fetchRules(): Result<Map<String, Any>, SourceQueryError> =
+        client.fetch(MessageType.Request.RulesRequest)
+
+    override fun close() {
+        client.close()
     }
 }

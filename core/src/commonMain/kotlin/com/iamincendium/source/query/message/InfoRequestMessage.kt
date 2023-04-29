@@ -1,6 +1,8 @@
 package com.iamincendium.source.query.message
 
-internal val INFO_REQUEST_CONTENT = "Source Engine Query\u0000".encodeToByteArray()
+import okio.Buffer
+
+internal const val INFO_REQUEST_CONTENT = "Source Engine Query\u0000"
 
 /**
  * `A2S_INFO`
@@ -16,4 +18,17 @@ internal val INFO_REQUEST_CONTENT = "Source Engine Query\u0000".encodeToByteArra
  * @see ChallengeResponseMessage
  * @see InfoResponseMessage
  */
-internal object InfoRequestMessage : SourceRequestMessage(MessageType.Request.InfoRequest, INFO_REQUEST_CONTENT)
+internal class InfoRequestMessage(
+    challenge: Int? = null,
+) : SourceRequestMessage(MessageType.Request.InfoRequest, buildPayload(challenge)) {
+    private companion object {
+        private fun buildPayload(challenge: Int?): ByteArray {
+            val buffer = Buffer()
+            buffer.writeUtf8(INFO_REQUEST_CONTENT)
+            if (challenge != null) {
+                buffer.writeIntLe(challenge)
+            }
+            return buffer.readByteArray()
+        }
+    }
+}

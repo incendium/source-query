@@ -1,5 +1,7 @@
 package com.iamincendium.source.query.message
 
+import okio.Buffer
+
 /**
  * Base message for constructing outgoing messages towards a server which supports the Source query protocol.
  *
@@ -11,4 +13,9 @@ public sealed class SourceRequestMessage(private val type: MessageType, payload:
     protected val payload: ByteArray = payload.copyOf()
 
     public override val bytes: ByteArray get() = SingleFragmentMessageHeader.bytes + type.byte + payload
+
+    internal companion object {
+        fun buildChallengePayload(challenge: Int): ByteArray =
+            Buffer().also { it.writeIntLe(challenge) }.readByteArray()
+    }
 }
